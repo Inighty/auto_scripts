@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import errno
 import re
+import socket
 import time
 import traceback
 
@@ -7,9 +9,9 @@ from zxtouch.client import zxtouch
 from zxtouch.toasttypes import *
 from zxtouch.touchtypes import *
 
-device = zxtouch("127.0.0.1")
+ip = "127.0.0.1"
 
-#device = zxtouch("192.168.0.179")
+device = zxtouch(ip)
 time.sleep(0.1)
 
 
@@ -70,11 +72,7 @@ def to_click(arr, pattern, sleep=10, func=None):
 def ocr(languages=None):
     if languages is None:
         languages = ['zh-Hans']
-    try:
-        return device.ocr((0, 0, 0, 0), languages=languages, recognition_level=0)
-    except Exception as e:
-        pprint(traceback.format_exc())
-        return None
+    return device.ocr((0, 0, 0, 0), languages=languages, recognition_level=0)
 
 
 def add_shopcar():
@@ -128,7 +126,19 @@ def main():
                                 break
             time.sleep(2)
 
-try:
-    main()
-except Exception as e:
-    pprint(traceback.format_exc())
+
+def start():
+    global device
+    try:
+        main()
+    except socket.error as e:
+        if e.errno != errno.EPIPE:
+            pprint("not pipe broken error")
+        else:
+            device.disconnect()
+            time.sleep(0.5)
+            device = zxtouch(ip)
+            start()
+
+
+start()
