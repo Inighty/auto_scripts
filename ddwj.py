@@ -2,8 +2,6 @@
 import errno
 import re
 import socket
-import time
-import traceback
 
 from zxtouch.client import zxtouch
 from zxtouch.toasttypes import *
@@ -11,8 +9,13 @@ from zxtouch.touchtypes import *
 
 ip = "127.0.0.1"
 
+
+def sleep(seconds):
+    device.accurate_usleep(seconds * 1000000)
+
+
 device = zxtouch(ip)
-time.sleep(0.1)
+sleep(0.1)
 
 
 def pprint(data):
@@ -23,9 +26,9 @@ def pprint(data):
 
 
 def back_jd():
-    time.sleep(0.1)
+    sleep(0.1)
     device.switch_to_app("com.360buy.jdmobile")
-    time.sleep(1)
+    sleep(1)
 
 
 def back(x=38, y=66):
@@ -34,12 +37,12 @@ def back(x=38, y=66):
 
 def touch(x, y):
     device.touch(TOUCH_DOWN, 1, x, y)
-    time.sleep(0.1)
+    sleep(0.2)
     device.touch(TOUCH_UP, 1, x, y)
-    time.sleep(1)
+    sleep(1)
 
 
-def to_click(arr, pattern, sleep=10, func=None):
+def to_click(arr, pattern, sleep_sec=10, func=None):
     has_task = False
 
     back_flag = True
@@ -61,12 +64,16 @@ def to_click(arr, pattern, sleep=10, func=None):
             x = int(sss[1][i + 1]['x'])
             y = int(sss[1][i + 1]['y'])
             touch(x, y)
-            time.sleep(sleep)
+            sleep(sleep_sec)
             if func:
                 func()
             back()
-            time.sleep(2)
+            sleep(2)
     return has_task
+
+
+def scan():
+    back_jd()
 
 
 def ocr(languages=None):
@@ -84,7 +91,7 @@ def add_shopcar():
                 x = int(item['x'])
                 y = int(item['y'])
                 touch(x + 250, y)
-                time.sleep(1)
+                sleep(1)
                 back()
 
 
@@ -97,7 +104,7 @@ def focus():
                 x = int(item['x'])
                 y = int(item['y'])
                 touch(x, y)
-                time.sleep(1)
+                sleep(1)
                 break
 
 
@@ -108,6 +115,8 @@ def open_member():
         for item in arr:
             if item['text'].__contains__('加入店铺会员'):
                 pprint("不自动开会员，如果已开通会员进来只是完成任务，结束脚本")
+                back()
+                device.show_toast(TOAST_SUCCESS, "task end.", 5)
                 exit(0)
 
 
@@ -119,26 +128,26 @@ def main():
         if sss and sss[0]:
             result = sss[1]
             if not to_click(result, '\\d+S'):
-                if not to_click(result, '浏览会场', 4):
+                if not to_click(result, '浏览会场', 4, scan):
                     if not to_click(result, '加购', 3, add_shopcar):
                         if not to_click(result, '成功关注', 3, focus):
                             if not to_click(result, '开通品牌会员', 3, open_member):
                                 break
-            time.sleep(2)
+            sleep(2)
 
 
-def start():
-    global device
-    try:
-        main()
-    except socket.error as e:
-        if e.errno != errno.EPIPE:
-            pprint("not pipe broken error")
-        else:
-            device.disconnect()
-            time.sleep(0.5)
-            device = zxtouch(ip)
-            start()
+# def start():
+#     global device
+#     try:
+#         main()
+#     except socket.error as e:
+#         if e.errno != errno.EPIPE:
+#             pprint("not pipe broken error")
+#         else:
+#             device.disconnect()
+#             sleep(0.5)
+#             device = zxtouch(ip)
+#             start()
+#
 
-
-start()
+main()
