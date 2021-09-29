@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import errno
 import re
-import socket
 
 from zxtouch.client import zxtouch
 from zxtouch.toasttypes import *
 from zxtouch.touchtypes import *
 
+back_x_y = (38, 66)
+close_x_y = (128, 98)
 ip = "127.0.0.1"
 
 
@@ -26,18 +26,18 @@ def pprint(data):
 
 
 def back_jd():
-    sleep(0.1)
+    sleep(3)
     device.switch_to_app("com.360buy.jdmobile")
     sleep(1)
 
 
-def back(x=38, y=66):
+def back(x=back_x_y[0], y=back_x_y[1]):
     touch(x, y)
 
 
 def touch(x, y):
     device.touch(TOUCH_DOWN, 1, x, y)
-    sleep(0.2)
+    sleep(0.001)
     device.touch(TOUCH_UP, 1, x, y)
     sleep(1)
 
@@ -51,7 +51,7 @@ def to_click(arr, pattern, sleep_sec=10, func=None):
             back_flag = False
             break
         if x['text'] == '残忍离开':
-            back(128, 98)
+            back(close_x_y[0], close_x_y[1])
             return True
     if back_flag:
         back()
@@ -136,18 +136,5 @@ def main():
             sleep(2)
 
 
-# def start():
-#     global device
-#     try:
-#         main()
-#     except socket.error as e:
-#         if e.errno != errno.EPIPE:
-#             pprint("not pipe broken error")
-#         else:
-#             device.disconnect()
-#             sleep(0.5)
-#             device = zxtouch(ip)
-#             start()
-#
-
 main()
+device.disconnect()
