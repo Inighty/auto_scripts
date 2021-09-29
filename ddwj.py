@@ -87,7 +87,7 @@ def add_shopcar():
                 y = int(item['y'])
                 touch(x + 250, y)
                 time.sleep(1)
-                break
+                back()
 
 
 def focus():
